@@ -11,6 +11,7 @@ To install `logger` pull it with `go get` like this
 `go get github.com/unacast/logger`
 
 or if you use `glide` just do a 
+
 ```bash
 glide get github.com/unacast/logger
 glide install
@@ -82,8 +83,17 @@ func main() {
 
 ### Loggers
 
-Logxi defaults to using a json formatter in produection and the a typical log line looks like this
-`løkasd`
+Logxi defaults to using a json formatter in production and a typical log line looks like this
+```bash
+{"_t":"2017-08-25T15:04:44+0200", "_p":"20698", "severity":"INFO", "_n":"main", "message":"The service has successfully launched"}
+```
+Some of the keys has been renamed to confrom with the Google Cloud Logging format
+
+Locally logxi uses a formatter that outputs lines like this
+```bash
+15:07:59.502228 INFO goa mount ctrl: K8sStatuses action: Liveness
+   route: GET /liveness
+```
 
 ## Maintainers 
  - @torbjornvatn 
