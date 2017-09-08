@@ -11,6 +11,8 @@ import (
 	"github.com/getsentry/raven-go"
 	"github.com/mgutz/logxi/v1"
 	"github.com/pkg/errors"
+	"io/ioutil"
+	"strings"
 )
 
 type mockTransport struct {
@@ -58,6 +60,32 @@ func TestErrorLogging(t *testing.T) {
 	}
 }
 
+func TestErrorLoggingToFile(t *testing.T) {
+
+	err := errors.New("This is an error")
+	testLogFile := "/tmp/test.log"
+	sl := NewLogger(Config {
+		Name:     "test",
+		FileName: testLogFile,
+	})
+	msg := "Something is wrong"
+	sl.Error(
+		msg,
+		err,
+		"one", "1", "two", 2,
+	)
+
+	fileContent, err := ioutil.ReadFile(testLogFile)
+	if err != nil {
+		t.Fatal("Didn't expect an error, got: ", err)
+	}
+
+	if !strings.Contains(string(fileContent), msg) {
+		t.Errorf("Expected %v to contain %v, did not", testLogFile, msg)
+	}
+
+}
+
 func TestSentry(t *testing.T) {
 	client, err := raven.New("https://public:secret@sentry.example.com/1")
 	if err != nil {
@@ -68,12 +96,12 @@ func TestSentry(t *testing.T) {
 	}
 	client.Transport = mt
 	raven.DefaultClient = client
-	l := NewSentryLogger("test")
+	l := NewSentryLogger(Config{Name: "test"})
 	l.Underlying().SetLevel(log.LevelFatal)
 
 	l.Error(
 		"Something is wrong",
-		fmt.Errorf("This is an error"),
+		fmt.Errorf("this is an error"),
 		"one", "1", "two", 2,
 	)
 

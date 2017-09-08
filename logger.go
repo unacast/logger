@@ -6,6 +6,7 @@ import (
 	"github.com/getsentry/raven-go"
 	"github.com/mgutz/logxi/v1"
 	"io"
+	"os"
 )
 
 // UnaLogger wraps a logxi logger
@@ -24,8 +25,13 @@ type unaLogger struct {
 	name string
 }
 
+type Config struct {
+	Name string
+	FileName string
+}
+
 // NewLogger creates a new logger with the given name
-func NewLogger(name string) UnaLogger {
+func NewLogger(conf Config) UnaLogger {
 	// These configurations are made to make the
 	// log payload compatible with the LogEntry format used in Google Cloud Logging
 	// https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry
@@ -36,16 +42,23 @@ func NewLogger(name string) UnaLogger {
 	log.LevelMap[log.LevelInfo] = "INFO"
 	log.LevelMap[log.LevelDebug] = "DEBUG"
 
+	logxiLogger := log.New(conf.Name)
+	if conf.FileName != "" {
+		if file, err := os.Create(conf.FileName); err == nil {
+			logxiLogger = log.NewLogger(file, conf.Name)
+		}
+	}
+
 	return &unaLogger{
-		Logger: log.New(name),
-		name: name,
+		Logger: logxiLogger,
+		name: conf.Name,
 	}
 }
 
 // NewLogger creates a new logger with the given name
 // and that passes errors to Sentry
-func NewSentryLogger(name string) UnaLogger {
-	l := NewLogger(name)
+func NewSentryLogger(conf Config) UnaLogger {
+	l := NewLogger(conf)
 	l.PassToSentry()
 	return l
 }
