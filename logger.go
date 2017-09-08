@@ -3,10 +3,11 @@ package logger
 import (
 	"fmt"
 
-	"github.com/getsentry/raven-go"
-	"github.com/mgutz/logxi/v1"
 	"io"
 	"os"
+
+	"github.com/getsentry/raven-go"
+	"github.com/mgutz/logxi/v1"
 )
 
 // UnaLogger wraps a logxi logger
@@ -20,17 +21,22 @@ type UnaLogger interface {
 }
 
 type unaLogger struct {
-	Logger log.Logger
+	Logger       log.Logger
 	passToSentry bool
-	name string
+	name         string
 }
 
 type Config struct {
-	Name string
+	Name     string
 	FileName string
 }
 
-// NewLogger creates a new logger with the given name
+// NewLogger creates a new logger with the given (string) name
+func New(name string) UnaLogger {
+	return NewLogger(Config{Name: name})
+}
+
+// NewLogger creates a new logger with the given (Config) name
 func NewLogger(conf Config) UnaLogger {
 	// These configurations are made to make the
 	// log payload compatible with the LogEntry format used in Google Cloud Logging
@@ -51,7 +57,7 @@ func NewLogger(conf Config) UnaLogger {
 
 	return &unaLogger{
 		Logger: logxiLogger,
-		name: conf.Name,
+		name:   conf.Name,
 	}
 }
 
@@ -64,7 +70,7 @@ func NewSentryLogger(conf Config) UnaLogger {
 }
 
 // SetWriter overrides the io.Writer of the underlying logxi logger
-func (ul *unaLogger) SetWriter(writer io.Writer)  {
+func (ul *unaLogger) SetWriter(writer io.Writer) {
 	ul.Logger = log.NewLogger(writer, ul.name)
 }
 
