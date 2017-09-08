@@ -5,6 +5,7 @@ import (
 
 	"github.com/getsentry/raven-go"
 	"github.com/mgutz/logxi/v1"
+	"io"
 )
 
 // UnaLogger wraps a logxi logger
@@ -30,6 +31,7 @@ func NewLogger(name string) UnaLogger {
 	// https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry
 	log.KeyMap.Level = "severity"
 	log.KeyMap.Message = "message"
+	log.KeyMap.Time = "timestamp"
 	log.LevelMap[log.LevelError] = "ERROR"
 	log.LevelMap[log.LevelInfo] = "INFO"
 	log.LevelMap[log.LevelDebug] = "DEBUG"
@@ -46,6 +48,11 @@ func NewSentryLogger(name string) UnaLogger {
 	l := NewLogger(name)
 	l.PassToSentry()
 	return l
+}
+
+// SetWriter overrides the io.Writer of the underlying logxi logger
+func (ul *unaLogger) SetWriter(writer io.Writer)  {
+	ul.Logger = log.NewLogger(writer, ul.name)
 }
 
 // PassToSentry indicates whether the Error function
