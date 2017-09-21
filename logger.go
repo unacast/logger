@@ -1,12 +1,12 @@
 package logger
 
 import (
-	"fmt"
-
 	"io"
 	"os"
 
-	"github.com/getsentry/raven-go"
+	"context"
+
+	"cloud.google.com/go/errorreporting"
 	"github.com/mgutz/logxi/v1"
 )
 
@@ -16,22 +16,33 @@ type UnaLogger interface {
 	Debug(msg string, args ...interface{})
 	Info(msg string, args ...interface{})
 	Error(msg string, err error, args ...interface{})
+	Fatal(msg string, err error, args ...interface{})
 	Underlying() log.Logger
-	PassToSentry()
 }
 
 type unaLogger struct {
-	Logger       log.Logger
-	passToSentry bool
-	name         string
+	Logger log.Logger
+	name   string
 }
 
+// Config contains Name and FileName for the logger
 type Config struct {
 	Name     string
 	FileName string
 }
 
-// NewLogger creates a new logger with the given (string) name
+func SetUpErrorReporting(ctx context.Context, projectID, serviceName string) {
+	errorClient, err := errorreporting.NewClient(ctx, projectID, serviceName, "v1.0", true)
+	if err != nil {
+		log.Fatal("Couldn't create an errorreporting client", err)
+	}
+	defer errorClient.Close()
+
+	// Report panics.
+	defer errorClient.Catch(ctx)
+}
+
+// New creates a new logger with the given (string) name
 func New(name string) UnaLogger {
 	return NewLogger(Config{Name: name})
 }
@@ -61,23 +72,9 @@ func NewLogger(conf Config) UnaLogger {
 	}
 }
 
-// NewLogger creates a new logger with the given name
-// and that passes errors to Sentry
-func NewSentryLogger(conf Config) UnaLogger {
-	l := NewLogger(conf)
-	l.PassToSentry()
-	return l
-}
-
 // SetWriter overrides the io.Writer of the underlying logxi logger
 func (ul *unaLogger) SetWriter(writer io.Writer) {
 	ul.Logger = log.NewLogger(writer, ul.name)
-}
-
-// PassToSentry indicates whether the Error function
-// should pass errors on to Sentry or not
-func (ul *unaLogger) PassToSentry() {
-	ul.passToSentry = true
 }
 
 // Underlying returns the underlying logxi logger
@@ -99,16 +96,12 @@ func (ul unaLogger) Debug(msg string, args ...interface{}) {
 
 // Error logs to Stdout with an "Error" prefix
 // It also adds an "error" key to the provided err(error) argument
-// If
 func (ul unaLogger) Error(msg string, err error, args ...interface{}) {
-	tags := make(map[string]string)
-	for i := 0; i < len(args); i += 2 {
-		tags[args[i].(string)] = fmt.Sprintf("%v", args[i+1])
-	}
-	e := ul.Logger.Error(msg, "error", err, "labels", tags)
+	_ = ul.Logger.Error(msg, append(args, "error", err)...)
+}
 
-	if ul.passToSentry {
-		raven.SetDefaultLoggerName(ul.name)
-		raven.CaptureError(e, tags)
-	}
+// Fatal logs to Stdout with an "Fatal" prefix
+// It also adds an "error" key to the provided err(error) argument
+func (ul unaLogger) Fatal(msg string, err error, args ...interface{}) {
+	ul.Logger.Fatal(msg, append(args, "error", err)...)
 }
