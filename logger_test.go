@@ -9,22 +9,9 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/getsentry/raven-go"
 	"github.com/mgutz/logxi/v1"
 	"github.com/pkg/errors"
-	"google.golang.org/api/option"
-	"cloud.google.com/go/errorreporting"
 )
-
-type mockTransport struct {
-	Packet chan raven.Packet
-}
-
-func (t *mockTransport) Send(url, authHeader string, packet *raven.Packet) error {
-	t.Packet <- *packet
-	close(t.Packet)
-	return nil
-}
 
 func TestErrorLogging(t *testing.T) {
 	var buf bytes.Buffer
