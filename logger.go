@@ -8,6 +8,8 @@ import (
 
 	"cloud.google.com/go/errorreporting"
 	"github.com/mgutz/logxi/v1"
+	"github.com/pkg/errors"
+	"fmt"
 )
 
 // UnaLogger wraps a logxi logger
@@ -34,13 +36,29 @@ type Config struct {
 // SetUpErrorReporting creates an ErrorReporting client and returns that client together with a catchPanics function.
 // That function should be defered in every new scope where you want to catch pancis and have them pass on to Stackdriver
 // Error Reporting
-func SetUpErrorReporting(ctx context.Context, projectID, serviceName string) (client *errorreporting.Client, catchPanics func()){
-	errorClient, err := errorreporting.NewClient(ctx, projectID, serviceName, "v1.0", true)
+func SetUpErrorReporting(ctx context.Context, projectID, serviceName string) (client *errorreporting.Client, recoverPanics func()) {
+	lgr := New("errorreporting")
+	errorClient, err := errorreporting.NewClient(ctx, projectID,
+		errorreporting.Config{
+			ServiceName:    serviceName,
+			ServiceVersion: "v1.0",
+			OnError: func(err error) {
+				lgr.Error("Couldn't send error to Stackdriver Errorreporting", err)
+			}})
 	if err != nil {
-		New("errorreporting").Fatal("Couldn't create an errorreporting client", err)
+		lgr.Fatal("Couldn't create an errorreporting client", err)
 	}
 	return errorClient, func() {
-		errorClient.Catch(ctx)
+		x := recover()
+		if x == nil {
+			return
+		}
+		switch e := x.(type) {
+		case string:
+			errorClient.Report(errorreporting.Entry{Error: errors.New(e)})
+		}
+		// repanics so the app execution stops
+		panic(fmt.Sprintf("Repanicked from logger: %v", x))
 	}
 }
 

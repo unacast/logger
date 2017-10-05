@@ -33,7 +33,7 @@ func TestErrorLogging(t *testing.T) {
 	if jsonErr != nil {
 		t.Fatalf("Hmm, couldn't unmarshal the log buffer %v. %v", buf.String(), jsonErr)
 	}
-	if obj["_m"] != msg {
+	if obj["message"] != msg {
 		t.Errorf("%v didn't match %v\n", obj["_m"], msg)
 	}
 	if obj["error"] != err.Error() {
