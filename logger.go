@@ -31,15 +31,17 @@ type Config struct {
 	FileName string
 }
 
-func SetUpErrorReporting(ctx context.Context, projectID, serviceName string) {
+// SetUpErrorReporting creates an ErrorReporting client and returns that client together with a catchPanics function.
+// That function should be defered in every new scope where you want to catch pancis and have them pass on to Stackdriver
+// Error Reporting
+func SetUpErrorReporting(ctx context.Context, projectID, serviceName string) (client *errorreporting.Client, catchPanics func()){
 	errorClient, err := errorreporting.NewClient(ctx, projectID, serviceName, "v1.0", true)
 	if err != nil {
-		log.Fatal("Couldn't create an errorreporting client", err)
+		New("errorreporting").Fatal("Couldn't create an errorreporting client", err)
 	}
-	defer errorClient.Close()
-
-	// Report panics.
-	defer errorClient.Catch(ctx)
+	return errorClient, func() {
+		errorClient.Catch(ctx)
+	}
 }
 
 // New creates a new logger with the given (string) name
