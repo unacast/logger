@@ -41,10 +41,7 @@ func SetUpErrorReporting(ctx context.Context, projectID, serviceName string) (cl
 	errorClient, err := errorreporting.NewClient(ctx, projectID,
 		errorreporting.Config{
 			ServiceName:    serviceName,
-			ServiceVersion: "v1.0",
-			OnError: func(err error) {
-				lgr.Error("Couldn't send error to Stackdriver Errorreporting", err)
-			}})
+			ServiceVersion: "v1.0"})
 	if err != nil {
 		lgr.Fatal("Couldn't create an errorreporting client", err)
 	}
@@ -55,7 +52,10 @@ func SetUpErrorReporting(ctx context.Context, projectID, serviceName string) (cl
 		}
 		switch e := x.(type) {
 		case string:
-			errorClient.Report(errorreporting.Entry{Error: errors.New(e)})
+			err := errorClient.ReportSync(ctx, errorreporting.Entry{Error: errors.New(e)})
+			if err != nil {
+				lgr.Error("Couldn't do a ReportSync to Stackdriver Error Reporting", err)
+			}
 		}
 		// repanics so the app execution stops
 		panic(fmt.Sprintf("Repanicked from logger: %v", x))
