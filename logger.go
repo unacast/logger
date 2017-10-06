@@ -33,10 +33,10 @@ type Config struct {
 	FileName string
 }
 
-// SetUpErrorReporting creates an ErrorReporting client and returns that client together with a catchPanics function.
+// SetUpErrorReporting creates an ErrorReporting client and returns that client together with a reportPanics function.
 // That function should be defered in every new scope where you want to catch pancis and have them pass on to Stackdriver
 // Error Reporting
-func SetUpErrorReporting(ctx context.Context, projectID, serviceName, serviceVersion string) (client *errorreporting.Client, recoverPanics func()) {
+func SetUpErrorReporting(ctx context.Context, projectID, serviceName, serviceVersion string) (client *errorreporting.Client, reportPanics func()) {
 	lgr := New("errorreporting")
 	errorClient, err := errorreporting.NewClient(ctx, projectID,
 		errorreporting.Config{
