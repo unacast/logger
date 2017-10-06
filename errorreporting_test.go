@@ -8,7 +8,7 @@ import (
 )
 
 func TestRecoverPanics(t *testing.T) {
-	client, recoverPanics := SetUpErrorReporting(context.Background(), "hepp", "test")
+	client, recoverPanics := SetUpErrorReporting(context.Background(), "hepp", "test", "v1.0")
 	defer func() {
 		x := recover()
 		if !strings.Contains(x.(string), "Repanicked from logger") {

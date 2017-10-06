@@ -36,12 +36,12 @@ type Config struct {
 // SetUpErrorReporting creates an ErrorReporting client and returns that client together with a catchPanics function.
 // That function should be defered in every new scope where you want to catch pancis and have them pass on to Stackdriver
 // Error Reporting
-func SetUpErrorReporting(ctx context.Context, projectID, serviceName string) (client *errorreporting.Client, recoverPanics func()) {
+func SetUpErrorReporting(ctx context.Context, projectID, serviceName, serviceVersion string) (client *errorreporting.Client, recoverPanics func()) {
 	lgr := New("errorreporting")
 	errorClient, err := errorreporting.NewClient(ctx, projectID,
 		errorreporting.Config{
 			ServiceName:    serviceName,
-			ServiceVersion: "v1.0"})
+			ServiceVersion: serviceVersion})
 	if err != nil {
 		lgr.Fatal("Couldn't create an errorreporting client", err)
 	}
