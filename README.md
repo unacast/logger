@@ -1,6 +1,6 @@
 # unalogger
 
-![logger](https://media.giphy.com/media/XnTVnapqHPw9W/giphy.gif)
+![logger](logger.gif)
 
 Opinionated [logxi](https://github.com/mgutz/logxi) based logging with the option of passing errors on to Sentry 
 
