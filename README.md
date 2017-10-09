@@ -1,4 +1,7 @@
-# logger
+# unalogger
+
+![logger](https://media.giphy.com/media/XnTVnapqHPw9W/giphy.gif)
+
 Opinionated [logxi](https://github.com/mgutz/logxi) based logging with the option of passing errors on to Sentry 
 
 ----
@@ -10,7 +13,11 @@ To install `logger` pull it with `go get` like this
 
 `go get github.com/unacast/logger`
 
-or if you use `glide` just do a 
+or if you use `dep` just do a
+```bash
+dep ensure -add github.com/unacast/logger
+```
+oooor if you use `glide` just do a 
 
 ```bash
 glide get github.com/unacast/logger
@@ -19,7 +26,7 @@ glide install
 
 ### Usage expamles
 
-_Without Sentry_
+#### Regular stdout logging
 
 ```go
 package main
@@ -28,7 +35,7 @@ import (
     "errors"
 )
 
-var log = logger.NewLogger("main")
+var log = logger.New("main")
 
 func main() {
 
@@ -49,37 +56,49 @@ func main() {
 }
 ```
 
-_With Sentry_
+#### Logging to custom logfile, e.g. for apps running on Appengine flex
+It might be a good idea to create a local logger package to do the setup with the desired filename etc.
 
 ```go
-package main
+package logger
 import (
     "github.com/unacast/logger"
-    "github.com/getsentry/raven-go"
-    "errors"
 )
 
-// Notice the call to NewSentryLogger here
-var log = logger.NewSentryLogger("main")
+const logFileEnv = "UC_[APP NAME HERE]_LOG_FILE"
 
-func main() {
+var (
+	logFileName = os.Getenv(logFileEnv)
+)
 
-    // If you're going to use the Sentry enabled logger
-    // remember to set these  
-    raven.SetDSN("[SENTRY DSN GOES HERE]")
-    raven.SetRelease("[GIT SHA extracted programatically]")
-    raven.SetEnvironment("[ENVIRONMENT e.g from an environment variable]")
-    
-    // Error takes an error as the second argument and it's added to 
-    // the list of key-value pairs with "error" as the key 
-    err := errors.New("This is an error!")
-    log.Info(
-        "Error log message",
-        err,
-        "jobID", "1312313", "count", 1000,
-    )
+func New(name string) unalogger.UnaLogger {
+	return unalogger.NewLogger(
+        unalogger.Config{
+            Name: name, 
+            FileName: logFileName
+        }
+     )
 }
 ```
+
+#### Use the Stackdriver Error Reporting functionality
+`unalogger` has an integration to optionally handle panics and report them as errors to *Stackdriver Error Reporting*.
+Initialise the `errorClient` in the start of your program, typically in `main.go`.
+```go
+func main() {
+
+	consts := constants.Consts
+
+	// Enable Stackdriver Errorreporting
+	errorClient, recoverPanics := logger.SetUpErrorReporting(context.Background(), consts.Project, "shipit", consts.GitSha)
+    // Defering this function handles panics in this scope/goroutine
+	defer recoverPanics()
+    // Strictly not necessary, 
+	defer errorClient.Close()
+    ...
+}
+```
+If you have several sub-goroutines in your app, you have to pass the `recoverPanics` into them and `defer recoverPanics` locally to handle panics there.
 
 ### Loggers
 
