@@ -89,11 +89,15 @@ func NewLogger(conf Config) UnaLogger {
 			logxiLogger = log.NewLogger(file, conf.Name)
 		}
 	}
-
-	return &unaLogger{
+	unaLogger := &unaLogger{
 		Logger: logxiLogger,
 		name:   conf.Name,
 	}
+
+	// add the logger to the list of loggers
+	loggers = append(loggers, unaLogger)
+
+	return unaLogger
 }
 
 // SetLevel loops over loggers and sets the level on each logger

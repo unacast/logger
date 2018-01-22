@@ -11,6 +11,11 @@ func TestSetLevel(t *testing.T) {
 	lgr := New("lgr")
 	lgr2 := New("lgr2")
 
+	SetLevel(log.LevelInfo)
+	if lgr.Underlying().IsDebug() || lgr2.Underlying().IsDebug() {
+		t.Error("None of the loggers should have Debug log level")
+	}
+
 	SetLevel(log.LevelDebug)
 	if !lgr.Underlying().IsDebug() || !lgr2.Underlying().IsDebug() {
 		t.Error("Both the loggers should have Debug log level")
