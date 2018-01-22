@@ -6,10 +6,11 @@ import (
 
 	"context"
 
+	"fmt"
+
 	"cloud.google.com/go/errorreporting"
 	"github.com/mgutz/logxi/v1"
 	"github.com/pkg/errors"
-	"fmt"
 )
 
 // UnaLogger wraps a logxi logger
@@ -32,6 +33,9 @@ type Config struct {
 	Name     string
 	FileName string
 }
+
+// Keep a list of loggers that we can use in the SetLevel func
+var loggers []UnaLogger
 
 // SetUpErrorReporting creates an ErrorReporting client and returns that client together with a reportPanics function.
 // That function should be defered in every new scope where you want to catch pancis and have them pass on to Stackdriver
@@ -89,6 +93,13 @@ func NewLogger(conf Config) UnaLogger {
 	return &unaLogger{
 		Logger: logxiLogger,
 		name:   conf.Name,
+	}
+}
+
+// SetLevel loops over loggers and sets the level on each logger
+func SetLevel(level int) {
+	for _, logger := range loggers {
+		logger.Underlying().SetLevel(level)
 	}
 }
 
