@@ -8,6 +8,8 @@ import (
 
 	"fmt"
 
+	"sync"
+
 	"cloud.google.com/go/errorreporting"
 	"github.com/mgutz/logxi/v1"
 	"github.com/pkg/errors"
@@ -66,13 +68,10 @@ func SetUpErrorReporting(ctx context.Context, projectID, serviceName, serviceVer
 	}
 }
 
-// New creates a new logger with the given (string) name
-func New(name string) UnaLogger {
-	return NewLogger(Config{Name: name})
-}
+var defaultsSet bool
+var mutex = sync.Mutex{}
 
-// NewLogger creates a new logger with the given (Config) name
-func NewLogger(conf Config) UnaLogger {
+func setDefaults() {
 	// These configurations are made to make the
 	// log payload compatible with the LogEntry format used in Google Cloud Logging
 	// https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry
@@ -82,6 +81,16 @@ func NewLogger(conf Config) UnaLogger {
 	log.LevelMap[log.LevelError] = "ERROR"
 	log.LevelMap[log.LevelInfo] = "INFO"
 	log.LevelMap[log.LevelDebug] = "DEBUG"
+	defaultsSet = true
+}
+
+// New creates a new logger with the given (string) name
+func New(name string) UnaLogger {
+	return NewLogger(Config{Name: name})
+}
+
+// NewLogger creates a new logger with the given (Config) name
+func NewLogger(conf Config) UnaLogger {
 
 	logxiLogger := log.New(conf.Name)
 	if conf.FileName != "" {
@@ -94,17 +103,16 @@ func NewLogger(conf Config) UnaLogger {
 		name:   conf.Name,
 	}
 
-	// add the logger to the list of loggers
+	// Add the logger to the list of loggers and set some defaults
+	// Needs to use a mutex here so loggers can be created in different goroutines
+	mutex.Lock()
 	loggers = append(loggers, unaLogger)
+	if !defaultsSet {
+		setDefaults()
+	}
+	mutex.Unlock()
 
 	return unaLogger
-}
-
-// SetLevel loops over loggers and sets the level on each logger
-func SetLevel(level int) {
-	for _, logger := range loggers {
-		logger.Underlying().SetLevel(level)
-	}
 }
 
 // SetWriter overrides the io.Writer of the underlying logxi logger

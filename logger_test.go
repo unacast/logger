@@ -72,3 +72,14 @@ func TestErrorLoggingToFile(t *testing.T) {
 	}
 
 }
+
+func TestLoggersInSeparateGoRoutines(t *testing.T) {
+	go func() {
+		lgr := New("lgr")
+		lgr.Info("lgr")
+	}()
+	go func() {
+		lgr2 := New("lgr2")
+		lgr2.Info("lgr2")
+	}()
+}
