@@ -39,6 +39,18 @@ type Config struct {
 // Keep a list of loggers that we can use in the SetLevel func
 var loggers []UnaLogger
 
+var errorClient *errorreporting.Client
+
+// InitErrorReporting will enable the errors of all calls to Error and Fatal to be sent to Google Error Reporting
+func InitErrorReporting(ctx context.Context, projectID, serviceName, serviceVersion string) error {
+	client, errClient := newErrorReportingClient(ctx, projectID, serviceName, serviceVersion)
+	if errClient != nil {
+		return errClient
+	}
+
+	errorClient = client
+}
+
 // SetUpErrorReporting creates an ErrorReporting client and returns that client together with a reportPanics function.
 // That function should be defered in every new scope where you want to catch pancis and have them pass on to Stackdriver
 // Error Reporting
@@ -65,6 +77,26 @@ func SetUpErrorReporting(ctx context.Context, projectID, serviceName, serviceVer
 		}
 		// repanics so the app execution stops
 		panic(fmt.Sprintf("Repanicked from logger: %v", x))
+	}
+}
+
+func newErrorReportingClient(ctx context.Context, projectID, serviceName, serviceVersion string) (*errorreporting.Client, error) {
+	client, err := errorreporting.NewClient(ctx, projectID,
+		errorreporting.Config{
+			ServiceName:    serviceName,
+			ServiceVersion: serviceVersion})
+	if err != nil {
+		return nil, err
+	}
+
+	return client, nil
+}
+
+func reportError(err error) {
+	if errorClient != nil {
+		errorClient.Report(errorreporting.Entry{
+			Error: err,
+		})
 	}
 }
 
@@ -140,11 +172,13 @@ func (ul unaLogger) Debug(msg string, args ...interface{}) {
 // Error logs to Stdout with an "Error" prefix
 // It also adds an "error" key to the provided err(error) argument
 func (ul unaLogger) Error(msg string, err error, args ...interface{}) {
+	reportError(err)
 	_ = ul.Logger.Error(msg, append(args, "error", err)...)
 }
 
 // Fatal logs to Stdout with an "Fatal" prefix
 // It also adds an "error" key to the provided err(error) argument
 func (ul unaLogger) Fatal(msg string, err error, args ...interface{}) {
+	reportError(err)
 	ul.Logger.Fatal(msg, append(args, "error", err)...)
 }
