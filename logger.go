@@ -49,6 +49,8 @@ func InitErrorReporting(ctx context.Context, projectID, serviceName, serviceVers
 	}
 
 	errorClient = client
+
+	return nil
 }
 
 // SetUpErrorReporting creates an ErrorReporting client and returns that client together with a reportPanics function.
