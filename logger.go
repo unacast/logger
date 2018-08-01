@@ -58,12 +58,9 @@ func InitErrorReporting(ctx context.Context, projectID, serviceName, serviceVers
 // Error Reporting
 func SetUpErrorReporting(ctx context.Context, projectID, serviceName, serviceVersion string) (client *errorreporting.Client, reportPanics func()) {
 	lgr := New("errorreporting")
-	errorClient, err := errorreporting.NewClient(ctx, projectID,
-		errorreporting.Config{
-			ServiceName:    serviceName,
-			ServiceVersion: serviceVersion})
-	if err != nil {
-		lgr.Fatal("Couldn't create an errorreporting client", err)
+	client, errClient := newErrorReportingClient(ctx, projectID, serviceName, serviceVersion)
+	if errClient != nil {
+		lgr.Fatal("Couldn't create an errorreporting client", errClient)
 	}
 	return errorClient, func() {
 		x := recover()

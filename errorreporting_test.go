@@ -20,3 +20,13 @@ func TestRecoverPanics(t *testing.T) {
 
 	panic("WOOT")
 }
+
+func TestInitErrorReporting(t *testing.T) {
+	err := InitErrorReporting(context.Background(), "hepp", "test", "v1.0")
+	if err != nil {
+		t.Errorf("Didn't expect an error, but got %s", err)
+	}
+	if errorClient == nil {
+		t.Errorf("Expected errorClient to be initialized, but it was nil")
+	}
+}
