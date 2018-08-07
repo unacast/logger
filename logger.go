@@ -109,6 +109,7 @@ func setDefaults() {
 	log.KeyMap.Level = "severity"
 	log.KeyMap.Message = "message"
 	log.KeyMap.Time = "timestamp"
+	log.LevelMap[log.LevelFatal] = "CRITICAL"
 	log.LevelMap[log.LevelError] = "ERROR"
 	log.LevelMap[log.LevelInfo] = "INFO"
 	log.LevelMap[log.LevelDebug] = "DEBUG"
