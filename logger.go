@@ -41,11 +41,19 @@ var loggers []UnaLogger
 
 var errorClient *errorreporting.Client
 
+// logger for internal use
+var lgr UnaLogger
+
 // InitErrorReporting will enable the errors of all calls to Error and Fatal to be sent to Google Error Reporting
+// It also enables the
 func InitErrorReporting(ctx context.Context, projectID, serviceName, serviceVersion string) error {
-	client, errClient := newErrorReportingClient(ctx, projectID, serviceName, serviceVersion)
-	if errClient != nil {
-		return errClient
+	lgr = New("unalogger")
+	client, err := errorreporting.NewClient(ctx, projectID,
+		errorreporting.Config{
+			ServiceName:    serviceName,
+			ServiceVersion: serviceVersion})
+	if err != nil {
+		return err
 	}
 
 	errorClient = client
@@ -53,12 +61,43 @@ func InitErrorReporting(ctx context.Context, projectID, serviceName, serviceVers
 	return nil
 }
 
+// ReportPanics should be defered in every new scope where you want to catch pancis and have them pass on to Stackdriver
+// Error Reporting
+func ReportPanics(ctx context.Context) {
+	if errorClient == nil {
+		panic("The errorClient was nil, initialize it with InitErrorReporting before deferring this functiond")
+	}
+	x := recover()
+	if x == nil {
+		return
+	}
+	switch e := x.(type) {
+	case string:
+		err := errorClient.ReportSync(ctx, errorreporting.Entry{Error: errors.New(e)})
+		if err != nil {
+			lgr.Error("Couldn't do a ReportSync to Stackdriver Error Reporting", err)
+		}
+	}
+	// repanics so the app execution stops
+	panic(fmt.Sprintf("Repanicked from logger: %s", x))
+}
+
+// CloseClient should be deferred right after calling InitErrorReporting to enure that the client is
+// closed down gracefully
+func CloseClient() {
+	if errorClient == nil {
+		panic("The errorClient was nil, initialize it with InitErrorReporting before deferring this functiond")
+	}
+	errorClient.Close()
+}
+
+// Deprecated: The functionality is split into InitErrorReporting, ReportPanics and CloseClient instead
 // SetUpErrorReporting creates an ErrorReporting client and returns that client together with a reportPanics function.
 // That function should be defered in every new scope where you want to catch pancis and have them pass on to Stackdriver
 // Error Reporting
 func SetUpErrorReporting(ctx context.Context, projectID, serviceName, serviceVersion string) (client *errorreporting.Client, reportPanics func()) {
 	lgr := New("errorreporting")
-	client, errClient := newErrorReportingClient(ctx, projectID, serviceName, serviceVersion)
+	errClient := InitErrorReporting(ctx, projectID, serviceName, serviceVersion)
 	if errClient != nil {
 		lgr.Fatal("Couldn't create an errorreporting client", errClient)
 	}
@@ -77,18 +116,6 @@ func SetUpErrorReporting(ctx context.Context, projectID, serviceName, serviceVer
 		// repanics so the app execution stops
 		panic(fmt.Sprintf("Repanicked from logger: %v", x))
 	}
-}
-
-func newErrorReportingClient(ctx context.Context, projectID, serviceName, serviceVersion string) (*errorreporting.Client, error) {
-	client, err := errorreporting.NewClient(ctx, projectID,
-		errorreporting.Config{
-			ServiceName:    serviceName,
-			ServiceVersion: serviceVersion})
-	if err != nil {
-		return nil, err
-	}
-
-	return client, nil
 }
 
 func reportError(err error) {

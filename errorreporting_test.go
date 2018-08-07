@@ -8,15 +8,19 @@ import (
 )
 
 func TestRecoverPanics(t *testing.T) {
-	client, reportPanics := SetUpErrorReporting(context.Background(), "hepp", "test", "v1.0")
+	ctx := context.Background()
+	err := InitErrorReporting(ctx, "hepp", "test", "v1.0")
+	if err != nil {
+		t.Fatal(err)
+	}
 	defer func() {
 		x := recover()
 		if !strings.Contains(x.(string), "Repanicked from logger") {
 			t.Errorf("Expected 'Repanicked from logger' in the repanicked message. Was: %v", x)
 		}
 	}()
-	defer reportPanics()
-	defer client.Close()
+	defer ReportPanics(ctx)
+	defer CloseClient()
 
 	panic("WOOT")
 }
