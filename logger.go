@@ -88,7 +88,7 @@ func CloseClient() {
 	if errorClient == nil {
 		panic("The errorClient was nil, initialize it with InitErrorReporting before deferring this functiond")
 	}
-	errorClient.Close()
+	var _ = errorClient.Close() // Ignoring this error
 }
 
 // Deprecated: The functionality is split into InitErrorReporting, ReportPanics and CloseClient instead
