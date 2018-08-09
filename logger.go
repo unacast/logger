@@ -63,30 +63,32 @@ func InitErrorReporting(ctx context.Context, projectID, serviceName, serviceVers
 
 // ReportPanics should be defered in every new scope where you want to catch pancis and have them pass on to Stackdriver
 // Error Reporting
-func ReportPanics(ctx context.Context) {
-	if errorClient == nil {
-		panic("The errorClient was nil, initialize it with InitErrorReporting before deferring this functiond")
-	}
-	x := recover()
-	if x == nil {
-		return
-	}
-	switch e := x.(type) {
-	case string:
-		err := errorClient.ReportSync(ctx, errorreporting.Entry{Error: errors.New(e)})
-		if err != nil {
-			lgr.Error("Couldn't do a ReportSync to Stackdriver Error Reporting", err)
+func ReportPanics(ctx context.Context) func() {
+	return func() {
+		if errorClient == nil {
+			panic("The errorClient was nil, initialize it with InitErrorReporting before deferring this function")
 		}
+		x := recover()
+		if x == nil {
+			return
+		}
+		switch e := x.(type) {
+		case string:
+			err := errorClient.ReportSync(ctx, errorreporting.Entry{Error: errors.New(e)})
+			if err != nil {
+				lgr.Error("Couldn't do a ReportSync to Stackdriver Error Reporting", err)
+			}
+		}
+		// repanics so the app execution stops
+		panic(fmt.Sprintf("Repanicked from logger: %s", x))
 	}
-	// repanics so the app execution stops
-	panic(fmt.Sprintf("Repanicked from logger: %s", x))
 }
 
 // CloseClient should be deferred right after calling InitErrorReporting to enure that the client is
 // closed down gracefully
 func CloseClient() {
 	if errorClient == nil {
-		panic("The errorClient was nil, initialize it with InitErrorReporting before deferring this functiond")
+		panic("The errorClient was nil, initialize it with InitErrorReporting before deferring this function")
 	}
 	var _ = errorClient.Close() // Ignoring this error
 }
