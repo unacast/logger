@@ -6,8 +6,6 @@ import (
 
 	"context"
 
-	"fmt"
-
 	"sync"
 
 	"cloud.google.com/go/errorreporting"
@@ -78,9 +76,16 @@ func ReportPanics(ctx context.Context) func() {
 			if err != nil {
 				lgr.Error("Couldn't do a ReportSync to Stackdriver Error Reporting", err)
 			}
+		case error:
+			err := errorClient.ReportSync(ctx, errorreporting.Entry{Error: e})
+			if err != nil {
+				lgr.Error("Couldn't do a ReportSync to Stackdriver Error Reporting", err)
+			}
+		default:
+			panic(x)
 		}
-		// repanics so the app execution stops
-		panic(fmt.Sprintf("Repanicked from logger: %s", x))
+		// exits with a non-zero code so the app execution stops
+		os.Exit(1337)
 	}
 }
 
@@ -116,7 +121,8 @@ func SetUpErrorReporting(ctx context.Context, projectID, serviceName, serviceVer
 			}
 		}
 		// repanics so the app execution stops
-		panic(fmt.Sprintf("Repanicked from logger: %v", x))
+		lgr.Info("Re-panicking ", "err", x)
+		panic(x)
 	}
 }
 
@@ -202,12 +208,20 @@ func (ul unaLogger) Debug(msg string, args ...interface{}) {
 // It also adds an "error" key to the provided err(error) argument
 func (ul unaLogger) Error(msg string, err error, args ...interface{}) {
 	reportError(err)
-	_ = ul.Logger.Error(msg, append(args, "error", err)...)
+	_ = ul.Logger.Error(msg, appendErrorToArgs(args, err)...)
 }
 
 // Fatal logs to Stdout with an "Fatal" prefix
 // It also adds an "error" key to the provided err(error) argument
 func (ul unaLogger) Fatal(msg string, err error, args ...interface{}) {
-	reportError(err)
+	if errorClient != nil {
+		defer ReportPanics(context.Background())()
+		ul.Logger.Log(log.LevelFatal, msg, appendErrorToArgs(args, err)) // Logging at level Fatal without the panic since we have reported to
+		panic("hmmm")
+	}
 	ul.Logger.Fatal(msg, append(args, "error", err)...)
+}
+
+func appendErrorToArgs(args []interface{}, err error) []interface{} {
+	return append(args, "error", err)
 }

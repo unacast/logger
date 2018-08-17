@@ -3,8 +3,6 @@ package logger
 import (
 	"context"
 	"testing"
-
-	"strings"
 )
 
 func TestRecoverPanics(t *testing.T) {
@@ -15,14 +13,14 @@ func TestRecoverPanics(t *testing.T) {
 	}
 	defer func() {
 		x := recover()
-		if !strings.Contains(x.(string), "Repanicked from logger") {
-			t.Errorf("Expected 'Repanicked from logger' in the repanicked message. Was: %v", x)
+		if x != nil {
+			t.Errorf("Didn't expect to recover here, but got %s", x)
 		}
 	}()
-	defer ReportPanics(ctx)
+	defer ReportPanics(ctx)()
 	defer CloseClient()
-
 	panic("WOOT")
+
 }
 
 func TestInitErrorReporting(t *testing.T) {

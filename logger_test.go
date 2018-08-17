@@ -9,6 +9,8 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"context"
+
 	"github.com/mgutz/logxi/v1"
 	"github.com/pkg/errors"
 )
@@ -82,4 +84,23 @@ func TestLoggersInSeparateGoRoutines(t *testing.T) {
 		lgr2 := New("lgr2")
 		lgr2.Info("lgr2")
 	}()
+}
+
+func TestRecoverPanicsInFatal(t *testing.T) {
+	ctx := context.Background()
+	err := InitErrorReporting(ctx, "hepp", "test", "v1.0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ReportPanics(ctx)
+	defer CloseClient()
+	defer func() {
+		x := recover()
+		if x != nil {
+			t.Errorf("there shouldn't be anything to recover here, but got %s", x)
+		}
+	}()
+
+	lgr := New("lgr")
+	lgr.Fatal("FATAL", errors.New("FATAL ERROR"))
 }
