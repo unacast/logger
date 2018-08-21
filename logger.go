@@ -6,8 +6,6 @@ import (
 
 	"context"
 
-	"fmt"
-
 	"sync"
 
 	"cloud.google.com/go/errorreporting"
@@ -41,11 +39,19 @@ var loggers []UnaLogger
 
 var errorClient *errorreporting.Client
 
+// logger for internal use
+var lgr UnaLogger
+
 // InitErrorReporting will enable the errors of all calls to Error and Fatal to be sent to Google Error Reporting
+// It also enables the
 func InitErrorReporting(ctx context.Context, projectID, serviceName, serviceVersion string) error {
-	client, errClient := newErrorReportingClient(ctx, projectID, serviceName, serviceVersion)
-	if errClient != nil {
-		return errClient
+	lgr = New("unalogger")
+	client, err := errorreporting.NewClient(ctx, projectID,
+		errorreporting.Config{
+			ServiceName:    serviceName,
+			ServiceVersion: serviceVersion})
+	if err != nil {
+		return err
 	}
 
 	errorClient = client
@@ -53,12 +59,52 @@ func InitErrorReporting(ctx context.Context, projectID, serviceName, serviceVers
 	return nil
 }
 
+// ReportPanics should be defered in every new scope where you want to catch pancis and have them pass on to Stackdriver
+// Error Reporting
+func ReportPanics(ctx context.Context) func() {
+	return func() {
+		if errorClient == nil {
+			panic("The errorClient was nil, initialize it with InitErrorReporting before deferring this function")
+		}
+		x := recover()
+		if x == nil {
+			return
+		}
+		switch e := x.(type) {
+		case string:
+			err := errorClient.ReportSync(ctx, errorreporting.Entry{Error: errors.New(e)})
+			if err != nil {
+				lgr.Error("Couldn't do a ReportSync to Stackdriver Error Reporting", err)
+			}
+		case error:
+			err := errorClient.ReportSync(ctx, errorreporting.Entry{Error: e})
+			if err != nil {
+				lgr.Error("Couldn't do a ReportSync to Stackdriver Error Reporting", err)
+			}
+		default:
+			panic(x)
+		}
+		// exits with a non-zero code so the app execution stops
+		os.Exit(1337)
+	}
+}
+
+// CloseClient should be deferred right after calling InitErrorReporting to enure that the client is
+// closed down gracefully
+func CloseClient() {
+	if errorClient == nil {
+		panic("The errorClient was nil, initialize it with InitErrorReporting before deferring this function")
+	}
+	var _ = errorClient.Close() // Ignoring this error
+}
+
+// Deprecated: The functionality is split into InitErrorReporting, ReportPanics and CloseClient instead
 // SetUpErrorReporting creates an ErrorReporting client and returns that client together with a reportPanics function.
 // That function should be defered in every new scope where you want to catch pancis and have them pass on to Stackdriver
 // Error Reporting
 func SetUpErrorReporting(ctx context.Context, projectID, serviceName, serviceVersion string) (client *errorreporting.Client, reportPanics func()) {
 	lgr := New("errorreporting")
-	client, errClient := newErrorReportingClient(ctx, projectID, serviceName, serviceVersion)
+	errClient := InitErrorReporting(ctx, projectID, serviceName, serviceVersion)
 	if errClient != nil {
 		lgr.Fatal("Couldn't create an errorreporting client", errClient)
 	}
@@ -75,20 +121,9 @@ func SetUpErrorReporting(ctx context.Context, projectID, serviceName, serviceVer
 			}
 		}
 		// repanics so the app execution stops
-		panic(fmt.Sprintf("Repanicked from logger: %v", x))
+		lgr.Info("Re-panicking ", "err", x)
+		panic(x)
 	}
-}
-
-func newErrorReportingClient(ctx context.Context, projectID, serviceName, serviceVersion string) (*errorreporting.Client, error) {
-	client, err := errorreporting.NewClient(ctx, projectID,
-		errorreporting.Config{
-			ServiceName:    serviceName,
-			ServiceVersion: serviceVersion})
-	if err != nil {
-		return nil, err
-	}
-
-	return client, nil
 }
 
 func reportError(err error) {
@@ -173,12 +208,20 @@ func (ul unaLogger) Debug(msg string, args ...interface{}) {
 // It also adds an "error" key to the provided err(error) argument
 func (ul unaLogger) Error(msg string, err error, args ...interface{}) {
 	reportError(err)
-	_ = ul.Logger.Error(msg, append(args, "error", err)...)
+	_ = ul.Logger.Error(msg, appendErrorToArgs(args, err)...)
 }
 
 // Fatal logs to Stdout with an "Fatal" prefix
 // It also adds an "error" key to the provided err(error) argument
 func (ul unaLogger) Fatal(msg string, err error, args ...interface{}) {
-	reportError(err)
+	if errorClient != nil {
+		defer ReportPanics(context.Background())()
+		ul.Logger.Log(log.LevelFatal, msg, appendErrorToArgs(args, err)) // Logging at level Fatal without the panic since we have reported to
+		panic("hmmm")
+	}
 	ul.Logger.Fatal(msg, append(args, "error", err)...)
+}
+
+func appendErrorToArgs(args []interface{}, err error) []interface{} {
+	return append(args, "error", err)
 }

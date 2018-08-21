@@ -1,4 +1,6 @@
 #! /usr/bin/env bash
 
-go test -race "$(go list ./... | grep -v /vendor/)" "$(glide novendor)"
+export LOGXI="unalogger=OFF"
+
+go test -race "$(go list ./... | grep -v /vendor/)"
 
