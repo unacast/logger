@@ -17,6 +17,7 @@ func TestRecoverPanics(t *testing.T) {
 			t.Errorf("Didn't expect to recover here, but got %s", x)
 		}
 	}()
+	ExitOnPanic = false
 	defer ReportPanics(ctx)()
 	defer CloseClient()
 	panic("WOOT")

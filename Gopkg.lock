@@ -2,17 +2,20 @@
 
 
 [[projects]]
+  digest = "1:1f77bda96749e769952e655b2452576e37965bfe363f96c16f639504a54c9f33"
   name = "cloud.google.com/go"
   packages = [
     "compute/metadata",
     "errorreporting",
     "errorreporting/apiv1beta1",
-    "internal/version"
+    "internal/version",
   ]
+  pruneopts = ""
   revision = "777200caa7fb8936aed0f12b1fd79af64cc83ec9"
   version = "v0.24.0"
 
 [[projects]]
+  digest = "1:f958a1c137db276e52f0b50efee41a1a389dcdded59a69711f3e872757dab34b"
   name = "github.com/golang/protobuf"
   packages = [
     "proto",
@@ -21,48 +24,62 @@
     "ptypes/any",
     "ptypes/duration",
     "ptypes/struct",
-    "ptypes/timestamp"
+    "ptypes/timestamp",
   ]
+  pruneopts = ""
   revision = "b4deda0973fb4c70b50d226b1af49f3da59f5265"
   version = "v1.1.0"
 
 [[projects]]
+  digest = "1:e097a364f4e8d8d91b9b9eeafb992d3796a41fde3eb548c1a87eb9d9f60725cf"
   name = "github.com/googleapis/gax-go"
   packages = ["."]
+  pruneopts = ""
   revision = "317e0006254c44a0ac427cc52a0e083ff0b9622f"
   version = "v2.0.0"
 
 [[projects]]
+  digest = "1:9ea83adf8e96d6304f394d40436f2eb44c1dc3250d223b74088cc253a6cd0a1c"
   name = "github.com/mattn/go-colorable"
   packages = ["."]
+  pruneopts = ""
   revision = "167de6bfdfba052fa6b2d3664c8f5272e23c9072"
   version = "v0.0.9"
 
 [[projects]]
+  digest = "1:78229b46ddb7434f881390029bd1af7661294af31f6802e0e1bedaad4ab0af3c"
   name = "github.com/mattn/go-isatty"
   packages = ["."]
+  pruneopts = ""
   revision = "0360b2af4f38e8d38c7fce2a9f4e702702d73a39"
   version = "v0.0.3"
 
 [[projects]]
   branch = "master"
+  digest = "1:50416da10e189bc201e122e20078fb8e680a439cbdd24aaece06c434b4415b60"
   name = "github.com/mgutz/ansi"
   packages = ["."]
+  pruneopts = ""
   revision = "9520e82c474b0a04dd04f8a40959027271bab992"
 
 [[projects]]
+  digest = "1:47af139ef25cee26d54b8422b73a043ab5d8f5ec26a1ae49d3ca9212f1dbfdac"
   name = "github.com/mgutz/logxi"
   packages = ["v1"]
+  pruneopts = ""
   revision = "aebf8a7d67ab4625e0fd4a665766fef9a709161b"
   version = "v1"
 
 [[projects]]
+  digest = "1:7365acd48986e205ccb8652cc746f09c8b7876030d53710ea6ef7d0bd0dcd7ca"
   name = "github.com/pkg/errors"
   packages = ["."]
+  pruneopts = ""
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
   version = "v0.8.0"
 
 [[projects]]
+  digest = "1:eb3da47361162f0ad991ddf391e6dc03e23889201d76046e2917687b84977aee"
   name = "go.opencensus.io"
   packages = [
     ".",
@@ -78,13 +95,15 @@
     "tag",
     "trace",
     "trace/internal",
-    "trace/propagation"
+    "trace/propagation",
   ]
+  pruneopts = ""
   revision = "e262766cd0d230a1bb7c37281e345e465f19b41b"
   version = "v0.14.0"
 
 [[projects]]
   branch = "master"
+  digest = "1:c4009838d5e021df996b864edd8847de1a59db8b2878a04a449a7b5e74a56cd5"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -94,35 +113,43 @@
     "http2/hpack",
     "idna",
     "internal/timeseries",
-    "trace"
+    "trace",
   ]
+  pruneopts = ""
   revision = "32a936f46389aa10549d60bd7833e54b01685d09"
 
 [[projects]]
   branch = "master"
+  digest = "1:a6237bd1fe4eed8524971a2923fcadb54e9584b19516a35d3f76f1c53f603cf9"
   name = "golang.org/x/oauth2"
   packages = [
     ".",
     "google",
     "internal",
     "jws",
-    "jwt"
+    "jwt",
   ]
+  pruneopts = ""
   revision = "ef147856a6ddbb60760db74283d2424e98c87bff"
 
 [[projects]]
   branch = "master"
+  digest = "1:b2ea75de0ccb2db2ac79356407f8a4cd8f798fe15d41b381c00abf3ae8e55ed1"
   name = "golang.org/x/sync"
   packages = ["semaphore"]
+  pruneopts = ""
   revision = "1d60e4601c6fd243af51cc01ddf169918a5407ca"
 
 [[projects]]
   branch = "master"
+  digest = "1:887e3da34f7dbf020043c1c89db8a40a9fedfb8af493161c2ae2a91d6cf9433f"
   name = "golang.org/x/sys"
   packages = ["unix"]
+  pruneopts = ""
   revision = "ce36f3865eeb42541ce3f87f32f8462c5687befa"
 
 [[projects]]
+  digest = "1:5acd3512b047305d49e8763eef7ba423901e85d5dd2fd1e71778a0ea8de10bd4"
   name = "golang.org/x/text"
   packages = [
     "collate",
@@ -138,13 +165,15 @@
     "unicode/bidi",
     "unicode/cldr",
     "unicode/norm",
-    "unicode/rangetable"
+    "unicode/rangetable",
   ]
+  pruneopts = ""
   revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
   version = "v0.3.0"
 
 [[projects]]
   branch = "master"
+  digest = "1:126dea539567d04cfa739ae1765f26b49ecf4e8fc7696f69f2948da5bc992345"
   name = "google.golang.org/api"
   packages = [
     "googleapi/transport",
@@ -154,11 +183,13 @@
     "support/bundler",
     "transport",
     "transport/grpc",
-    "transport/http"
+    "transport/http",
   ]
+  pruneopts = ""
   revision = "61180b1196c9b6bec3ea78396c7805bdc117dcdc"
 
 [[projects]]
+  digest = "1:c1771ca6060335f9768dff6558108bc5ef6c58506821ad43377ee23ff059e472"
   name = "google.golang.org/appengine"
   packages = [
     ".",
@@ -172,24 +203,28 @@
     "internal/socket",
     "internal/urlfetch",
     "socket",
-    "urlfetch"
+    "urlfetch",
   ]
+  pruneopts = ""
   revision = "b1f26356af11148e710935ed1ac8a7f5702c7612"
   version = "v1.1.0"
 
 [[projects]]
   branch = "master"
+  digest = "1:a5959f4640612317b0d3122569b7c02565ba6277aa0374cff2ed610c81ef8d74"
   name = "google.golang.org/genproto"
   packages = [
     "googleapis/api/annotations",
     "googleapis/api/label",
     "googleapis/api/monitoredres",
     "googleapis/devtools/clouderrorreporting/v1beta1",
-    "googleapis/rpc/status"
+    "googleapis/rpc/status",
   ]
+  pruneopts = ""
   revision = "ff3583edef7de132f219f0efc00e097cabcc0ec0"
 
 [[projects]]
+  digest = "1:5f31b45ee9da7a87f140bef3ed0a7ca34ea2a6d38eb888123b8e28170e8aa4f2"
   name = "google.golang.org/grpc"
   packages = [
     ".",
@@ -217,14 +252,19 @@
     "stats",
     "status",
     "tap",
-    "transport"
+    "transport",
   ]
+  pruneopts = ""
   revision = "168a6198bcb0ef175f7dacec0b8691fc141dc9b8"
   version = "v1.13.0"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "df005fae9b5defc7ad5fbc7cecf095607a900be19aaf7a9e8154e02172145808"
+  input-imports = [
+    "cloud.google.com/go/errorreporting",
+    "github.com/mgutz/logxi/v1",
+    "github.com/pkg/errors",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1

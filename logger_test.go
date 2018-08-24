@@ -36,16 +36,16 @@ func TestErrorLogging(t *testing.T) {
 		t.Fatalf("Hmm, couldn't unmarshal the log buffer %v. %v", buf.String(), jsonErr)
 	}
 	if obj["message"] != msg {
-		t.Errorf("%v didn't match %v\n", obj["_m"], msg)
+		t.Errorf("message \"%#v\" didn't match %#v\n", obj["message"], msg)
 	}
 	if obj["error"] != err.Error() {
-		t.Errorf("%v didn't match %v\n", buf.String(), err.Error())
+		t.Errorf("error \"%v\" didn't match %v\n", buf.String(), err.Error())
 	}
 	if obj["one"] != "1" {
-		t.Errorf("%v didn't match %v\n", obj["one"], "1")
+		t.Errorf("arg one \"%v\" didn't match %v\n", obj["one"], "1")
 	}
 	if obj["two"] != 2.0 {
-		t.Errorf("%v didn't match %v\n", obj["two"], 2.0)
+		t.Errorf("arg two \"%v\" didn't match %v\n", obj["two"], 2.0)
 	}
 }
 
@@ -101,6 +101,6 @@ func TestRecoverPanicsInFatal(t *testing.T) {
 		}
 	}()
 
-	lgr := New("lgr")
+	lgr := New("unalogger")
 	lgr.Fatal("FATAL", errors.New("FATAL ERROR"))
 }

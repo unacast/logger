@@ -42,6 +42,9 @@ var errorClient *errorreporting.Client
 // logger for internal use
 var lgr UnaLogger
 
+// ExitOnPanic makes it possible to disable exiting in ReportPanics
+var ExitOnPanic = true
+
 // InitErrorReporting will enable the errors of all calls to Error and Fatal to be sent to Google Error Reporting
 // It also enables the
 func InitErrorReporting(ctx context.Context, projectID, serviceName, serviceVersion string) error {
@@ -85,7 +88,9 @@ func ReportPanics(ctx context.Context) func() {
 			panic(x)
 		}
 		// exits with a non-zero code so the app execution stops
-		os.Exit(1337)
+		if ExitOnPanic {
+			os.Exit(1337)
+		}
 	}
 }
 
@@ -216,10 +221,10 @@ func (ul unaLogger) Error(msg string, err error, args ...interface{}) {
 func (ul unaLogger) Fatal(msg string, err error, args ...interface{}) {
 	if errorClient != nil {
 		defer ReportPanics(context.Background())()
-		ul.Logger.Log(log.LevelFatal, msg, appendErrorToArgs(args, err)) // Logging at level Fatal without the panic since we have reported to
-		panic("hmmm")
+		// Logging at level Fatal without the panic since we have reported to Errorreporting already
+		ul.Logger.Log(log.LevelFatal, msg, appendErrorToArgs(args, err))
 	}
-	ul.Logger.Fatal(msg, append(args, "error", err)...)
+	ul.Logger.Fatal(msg, appendErrorToArgs(args, err))
 }
 
 func appendErrorToArgs(args []interface{}, err error) []interface{} {
