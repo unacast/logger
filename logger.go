@@ -131,14 +131,6 @@ func SetUpErrorReporting(ctx context.Context, projectID, serviceName, serviceVer
 	}
 }
 
-func reportError(err error) {
-	if errorClient != nil {
-		errorClient.Report(errorreporting.Entry{
-			Error: err,
-		})
-	}
-}
-
 var defaultsSet bool
 var mutex = sync.Mutex{}
 
@@ -204,15 +196,17 @@ func (ul unaLogger) Info(msg string, args ...interface{}) {
 
 // Debug logs to Stdout with an "DEBUG" prefix if Debug level is enabled
 func (ul unaLogger) Debug(msg string, args ...interface{}) {
-	if ul.Logger.IsDebug() {
-		ul.Logger.Debug(msg, args...)
-	}
+	ul.Logger.Debug(msg, args...)
 }
 
 // Error logs to Stdout with an "Error" prefix
 // It also adds an "error" key to the provided err(error) argument
 func (ul unaLogger) Error(msg string, err error, args ...interface{}) {
-	reportError(err)
+	if errorClient != nil {
+		errorClient.Report(errorreporting.Entry{
+			Error: err,
+		})
+	}
 	_ = ul.Logger.Error(msg, appendErrorToArgs(args, err)...)
 }
 
