@@ -9,7 +9,7 @@ import (
 	"sync"
 
 	"cloud.google.com/go/errorreporting"
-	"github.com/mgutz/logxi/v1"
+	log "github.com/mgutz/logxi/v1"
 	"github.com/pkg/errors"
 )
 
@@ -141,8 +141,12 @@ func setDefaults() {
 	log.KeyMap.Level = "severity"
 	log.KeyMap.Message = "message"
 	log.KeyMap.Time = "timestamp"
+	log.LevelMap[log.LevelEmergency] = "EMERGENCY"
+	log.LevelMap[log.LevelAlert] = "ALERT"
 	log.LevelMap[log.LevelFatal] = "CRITICAL"
 	log.LevelMap[log.LevelError] = "ERROR"
+	log.LevelMap[log.LevelWarn] = "WARNING"
+	log.LevelMap[log.LevelNotice] = "NOTICE"
 	log.LevelMap[log.LevelInfo] = "INFO"
 	log.LevelMap[log.LevelDebug] = "DEBUG"
 	defaultsSet = true
