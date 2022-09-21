@@ -222,7 +222,7 @@ func (ul unaLogger) Fatal(msg string, err error, args ...interface{}) {
 		// Logging at level Fatal without the panic since we have reported to Errorreporting already
 		ul.Logger.Log(log.LevelFatal, msg, appendErrorToArgs(args, err))
 	}
-	ul.Logger.Fatal(msg, appendErrorToArgs(args, err))
+	ul.Logger.Fatal(msg, appendErrorToArgs(args, err)...)
 }
 
 func appendErrorToArgs(args []interface{}, err error) []interface{} {
